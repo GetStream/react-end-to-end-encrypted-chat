@@ -15,21 +15,18 @@ import {
   Thread,
   Window,
 } from 'stream-chat-react';
-import { v4 as uuidv4 } from 'uuid';
-import { Buffer } from 'buffer';
-
-import SealdSDK from '@seald-io/sdk/browser'; // if your bundler supports the "browser" field in package.json (supported by Webpack 5)
-import { SignJWT } from 'jose';
 
 import 'stream-chat-react/dist/css/v2/index.css';
 import './layout.css';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
+import EncryptedMessage from './EncryptedMessage';
+import { useSealdContext } from './contexts/SealdContext';
 
-const apiKey = 'dz5f4d5kzrue';
-const userId = 'royal-darkness-8';
-const userName = 'royal';
+const apiKey = 'qpvbxh63nz6h';
+const userId = 'TestUser';
+const userName = 'TestUser';
 const userToken =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoicm95YWwtZGFya25lc3MtOCIsImV4cCI6MTcxOTkzMDA1OH0.2riCvKvoWrbGtgltpN1jTerAIMxN0_gIIlytiQqSCzc';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiVGVzdFVzZXIifQ.GxZc2Q3CDNAXIYe_vAGoXEwVWUV4L9BspumCU4DF4Qw';
 
 const user: User = {
   id: userId,
@@ -46,42 +43,8 @@ const options: ChannelOptions = {
   limit: 10,
 };
 
-// Seald credentials
-const appId = import.meta.env.VITE_SEALD_APP_ID;
-const apiURL = import.meta.env.VITE_API_URL;
-
-const seald = SealdSDK({ appId, apiURL });
-
 const App = () => {
-  const registerSeald = useCallback(async function registerSeald() {
-    const signUpJWT = await createSignupJWT();
-    console.log('signUpJWT', signUpJWT);
-    await seald.initiateIdentity({ signupJWT: signUpJWT });
-  }, []);
-
-  useEffect(() => {
-    registerSeald();
-  }, [registerSeald]);
-
-  async function createSignupJWT() {
-    'use server';
-
-    const jwtSecret = import.meta.env.VITE_JWT_SECRET;
-    const jwtSecretId = import.meta.env.VITE_JWT_SECRET_ID;
-    console.log('jwtSecret', jwtSecret);
-    console.log('jwtSecretId', jwtSecretId);
-
-    const token = new SignJWT({
-      iss: jwtSecretId,
-      jti: uuidv4(), // So the JWT is only usable once. The `random` generates a random string, with enough entropy to never repeat : a UUIDv4 would be a good choice.
-      iat: Math.floor(Date.now() / 1000), // JWT valid only for 10 minutes. `Date.now()` returns the timestamp in milliseconds, this needs it in seconds.
-      scopes: [3], // PERMISSION_JOIN_TEAM
-      join_team: true,
-    }).setProtectedHeader({ alg: 'HS256' });
-
-    const signupJWT = await token.sign(Buffer.from(jwtSecret, 'ascii'));
-    return signupJWT;
-  }
+  const { loadingState, initializeSeald, encryptMessage } = useSealdContext();
 
   const client = useCreateChatClient({
     apiKey,
@@ -89,12 +52,18 @@ const App = () => {
     userData: user,
   });
 
+  useEffect(() => {
+    initializeSeald(userId, 'password');
+  }, [initializeSeald]);
+
   if (!client) return <div>Setting up client & connection...</div>;
+
+  if (loadingState === 'loading') return <div>Loading Seald...</div>;
 
   return (
     <Chat client={client}>
       <ChannelList filters={filters} sort={sort} options={options} />
-      <Channel>
+      <Channel Message={EncryptedMessage}>
         <Window>
           <ChannelHeader />
           <MessageList />
@@ -105,15 +74,17 @@ const App = () => {
               customMessageData,
               options
             ) => {
-              console.log('message', message);
-              if (message.text) {
-                console.log('Starting message encryption');
-                // const encryptedMessage = await seald.encryptMessage(
-                //   message.text,
-                //   { sealdIds: [sealdId.sealdId] }
-                // );
+              const messageToSend = message.text;
+              const extractedChannelId = channelId.split(':')[1];
 
-                // console.log('encryptedMessage', encryptedMessage);
+              if (messageToSend) {
+                await encryptMessage(
+                  messageToSend,
+                  extractedChannelId,
+                  client,
+                  customMessageData,
+                  options
+                );
               }
             }}
           />
