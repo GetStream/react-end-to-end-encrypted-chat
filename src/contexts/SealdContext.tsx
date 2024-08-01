@@ -44,7 +44,6 @@ export const SealdContextProvider = ({
 
   const initializeSeald = useCallback(
     async (userId: string, password: string) => {
-      console.log('Initializing Seald');
       const appId = import.meta.env.VITE_SEALD_APP_ID;
       const apiURL = import.meta.env.VITE_API_URL;
       const storageURL = import.meta.env.KEY_STORAGE_URL;
