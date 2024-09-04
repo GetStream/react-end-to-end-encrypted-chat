@@ -7,6 +7,7 @@ import { Message, SendMessageOptions, StreamChat } from 'stream-chat';
 import { DefaultStreamChatGenerics } from 'stream-chat-react';
 import { registerUser } from './registerUser';
 import { getDatabaseKey } from './getDatabaseKey';
+import { preDerivePassword } from '../lib/helpers/preDerivePassword';
 
 type SealdState = {
   sealdClient: typeof SealdSDK | undefined;
@@ -63,16 +64,18 @@ export const SealdContextProvider = ({
       });
 
       let mySealdId: string | undefined = undefined;
+      const derivedPassword = await preDerivePassword(password, userId);
+      console.log('derivedPassword: ', derivedPassword);
       try {
         const { sealdId } = await seald.ssksPassword.retrieveIdentity({
           userId,
-          password,
+          derivedPassword,
         });
         mySealdId = sealdId;
       } catch (error) {
         console.error('[App] Error retrieving identity', error);
         // Identity not found, we need to register the user
-        mySealdId = await registerUser(seald, userId, password);
+        mySealdId = await registerUser(seald, userId, derivedPassword);
       }
 
       const session: EncryptionSession = await seald.createEncryptionSession({
