@@ -49,30 +49,34 @@ export const SealdContextProvider = ({
       const apiURL = import.meta.env.VITE_API_URL;
       const storageURL = import.meta.env.KEY_STORAGE_URL;
 
-      const databaseKey = await getDatabaseKey(userId);
-      const databasePath = `seald-e2e-encrypted-chat-${userId}`;
+      // const databaseKey = await getDatabaseKey(userId);
+      // const databasePath = `seald-e2e-encrypted-chat-${userId}`;
 
+      // Commenting out databaseKey and databasePath for now since it's giving an
+      // "Already registered" error when retrieving the identity
       const seald = SealdSDK({
         appId,
         apiURL,
-        databaseKey,
-        databasePath,
+        // databaseKey,
+        // databasePath,
         plugins: [SealdSDKPluginSSKSPassword(storageURL)],
       });
 
-      // ⚠️ IMPORTANT:
-      // This is a one-time operation, to create the user's identity
-      // It is already done for the current user, so we only need to
-      // comment this in if there's a different user
-      // registerUser();
-
-      const identity = await seald.ssksPassword.retrieveIdentity({
-        userId,
-        password,
-      });
+      let mySealdId: string | undefined = undefined;
+      try {
+        const { sealdId } = await seald.ssksPassword.retrieveIdentity({
+          userId,
+          password,
+        });
+        mySealdId = sealdId;
+      } catch (error) {
+        console.error('[App] Error retrieving identity', error);
+        // Identity not found, we need to register the user
+        mySealdId = await registerUser(seald, userId, password);
+      }
 
       const session: EncryptionSession = await seald.createEncryptionSession({
-        sealdIds: [identity.sealdId],
+        sealdIds: [mySealdId],
       });
 
       setMyState((myState) => {
@@ -80,7 +84,7 @@ export const SealdContextProvider = ({
           ...myState,
           sealdClient: seald,
           encryptionSession: session,
-          sealdId: identity.sealdId,
+          sealdId: mySealdId,
           loadingState: 'finished',
         };
       });
