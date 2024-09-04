@@ -6,6 +6,7 @@ import { EncryptionSession } from '@seald-io/sdk/lib/main.js';
 import { Message, SendMessageOptions, StreamChat } from 'stream-chat';
 import { DefaultStreamChatGenerics } from 'stream-chat-react';
 import { registerUser } from './registerUser';
+import { getDatabaseKey } from './getDatabaseKey';
 
 type SealdState = {
   sealdClient: typeof SealdSDK | undefined;
@@ -48,9 +49,14 @@ export const SealdContextProvider = ({
       const apiURL = import.meta.env.VITE_API_URL;
       const storageURL = import.meta.env.KEY_STORAGE_URL;
 
+      const databaseKey = await getDatabaseKey(userId);
+      const databasePath = `seald-e2e-encrypted-chat-${userId}`;
+
       const seald = SealdSDK({
         appId,
         apiURL,
+        databaseKey,
+        databasePath,
         plugins: [SealdSDKPluginSSKSPassword(storageURL)],
       });
 
@@ -92,60 +98,66 @@ export const SealdContextProvider = ({
         | undefined,
       options: SendMessageOptions | undefined
     ) => {
-      let messageToSend = message;
-      if ((myState.sealdId, myState.encryptionSession)) {
-        console.log('Starting message encryption');
-        const encryptedMessage = await myState.encryptionSession.encryptMessage(
-          message
-        );
+      // let messageToSend = message;
+      // if ((myState.sealdId, myState.encryptionSession)) {
+      //   console.log('Starting message encryption');
+      //   const encryptedMessage = await myState.encryptionSession.encryptMessage(
+      //     message
+      //   );
 
-        console.log('encryptedMessage', encryptedMessage);
-        messageToSend = encryptedMessage;
-      }
-      try {
-        const channel = chatClient.channel('messaging', channelId);
-        const sendResult = await channel.sendMessage({
-          text: messageToSend,
-          customMessageData,
-          options,
-        });
+      //   console.log('encryptedMessage', encryptedMessage);
+      //   messageToSend = encryptedMessage;
+      // }
+      // try {
+      //   const channel = chatClient.channel('messaging', channelId);
+      //   const sendResult = await channel.sendMessage({
+      //     text: messageToSend,
+      //     customMessageData,
+      //     options,
+      //   });
 
-        console.log('sendResult', sendResult);
-      } catch (error) {
-        console.log('error', error);
-      }
+      //   console.log('sendResult', sendResult);
+      // } catch (error) {
+      //   console.log('error', error);
+      // }
+      console.log('Encrypting message: ', message);
     },
-    [myState.sealdId, myState.encryptionSession]
+    // [myState.sealdId, myState.encryptionSession]
+    []
   );
 
   const decryptMessage = useCallback(
     async (message: string, sessionId: string) => {
-      let encryptionSession = myState.encryptionSession;
-      if (!encryptionSession || encryptionSession.sessionId !== sessionId) {
-        // Either there is no session, or it doesn't match with the session id
-        console.log('No session found for decryption or session id mismatch');
-        encryptionSession = await myState.sealdClient.retrieveEncryptionSession(
-          {
-            sessionId,
-          }
-        );
-        console.log('encryptionSession: ', encryptionSession);
-        setMyState((myState) => {
-          return {
-            ...myState,
-            encryptionSession: encryptionSession,
-          };
-        });
-      }
+      //   let encryptionSession = myState.encryptionSession;
+      //   if (!encryptionSession || encryptionSession.sessionId !== sessionId) {
+      //     // Either there is no session, or it doesn't match with the session id
+      //     console.log('No session found for decryption or session id mismatch');
+      //     encryptionSession = await myState.sealdClient.retrieveEncryptionSession(
+      //       {
+      //         sessionId,
+      //       }
+      //     );
+      //     console.log('encryptionSession: ', encryptionSession);
+      //     setMyState((myState) => {
+      //       return {
+      //         ...myState,
+      //         encryptionSession: encryptionSession,
+      //       };
+      //     });
+      //   }
 
-      console.log('Starting message decryption: ', message);
-      const decryptedMessage =
-        (await encryptionSession?.decryptMessage(message)) || message;
-      console.log('Decrypted message: ', decryptedMessage);
+      //   console.log('Starting message decryption: ', message);
+      //   const decryptedMessage =
+      //     (await encryptionSession?.decryptMessage(message)) || message;
+      //   console.log('Decrypted message: ', decryptedMessage);
 
-      return decryptedMessage;
+      //   return decryptedMessage;
+      // },
+      console.log('Session ', sessionId, ', decrypting message: ', message);
+      return message;
     },
-    [myState.encryptionSession, myState.sealdClient]
+    // [myState.encryptionSession, myState.sealdClient]
+    []
   );
 
   const store: SealdState = {
