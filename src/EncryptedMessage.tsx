@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMessageContext } from 'stream-chat-react';
-import { useSealdContext } from './contexts/SealdContext';
+import { useSealdContext } from './contexts/useSealdContext';
 
 export default function EncryptedMessage(): JSX.Element {
   const { message } = useMessageContext();
@@ -18,7 +18,7 @@ export default function EncryptedMessage(): JSX.Element {
         }
       );
     }
-  }, [message, decryptMessage]);
+  }, [message.text, decryptMessage]);
   return (
     <div className='messageBubble'>
       <p>{displayedMessage}</p>

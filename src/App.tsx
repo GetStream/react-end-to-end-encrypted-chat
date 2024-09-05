@@ -1,32 +1,21 @@
-import type {
-  User,
-  ChannelSort,
-  ChannelFilters,
-  ChannelOptions,
-} from 'stream-chat';
-import {
-  useCreateChatClient,
-  Chat,
-  Channel,
-  ChannelHeader,
-  ChannelList,
-  MessageInput,
-  MessageList,
-  Thread,
-  Window,
-} from 'stream-chat-react';
+import type { User } from 'stream-chat';
+import { useCreateChatClient, Chat } from 'stream-chat-react';
 
 import 'stream-chat-react/dist/css/v2/index.css';
 import './layout.css';
 import { useEffect } from 'react';
-import EncryptedMessage from './EncryptedMessage';
-import { useSealdContext } from './contexts/SealdContext';
+import MyChat from './components/MyChat';
+import { useSealdContext } from './contexts/useSealdContext';
 
 const apiKey = 'qpvbxh63nz6h';
-const userId = 'TestUser';
-const userName = 'TestUser';
+// const userId = 'TestUser';
+// const userName = 'TestUser';
+// const userToken =
+//   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiVGVzdFVzZXIifQ.GxZc2Q3CDNAXIYe_vAGoXEwVWUV4L9BspumCU4DF4Qw';
+const userId = '75511395-951d-4944-ba0a-443b926a58dc';
+const userName = 'User 3';
 const userToken =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiVGVzdFVzZXIifQ.GxZc2Q3CDNAXIYe_vAGoXEwVWUV4L9BspumCU4DF4Qw';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNzU1MTEzOTUtOTUxZC00OTQ0LWJhMGEtNDQzYjkyNmE1OGRjIn0.2K6sB7cU7s2us9m6DRJ-AohPgdbvQtaEcV7RqxJSqYg';
 
 const user: User = {
   id: userId,
@@ -34,17 +23,8 @@ const user: User = {
   image: `https://getstream.io/random_png/?name=${userName}`,
 };
 
-const sort: ChannelSort = { last_message_at: -1 };
-const filters: ChannelFilters = {
-  type: 'messaging',
-  members: { $in: [userId] },
-};
-const options: ChannelOptions = {
-  limit: 10,
-};
-
 const App = () => {
-  const { loadingState, initializeSeald, encryptMessage } = useSealdContext();
+  const { loadingState, initializeSeald } = useSealdContext();
 
   const client = useCreateChatClient({
     apiKey,
@@ -62,35 +42,7 @@ const App = () => {
 
   return (
     <Chat client={client}>
-      <ChannelList filters={filters} sort={sort} options={options} />
-      <Channel Message={EncryptedMessage}>
-        <Window>
-          <ChannelHeader />
-          <MessageList />
-          <MessageInput
-            overrideSubmitHandler={async (
-              message,
-              channelId,
-              customMessageData,
-              options
-            ) => {
-              const messageToSend = message.text;
-              const extractedChannelId = channelId.split(':')[1];
-
-              if (messageToSend) {
-                await encryptMessage(
-                  messageToSend,
-                  extractedChannelId,
-                  client,
-                  customMessageData,
-                  options
-                );
-              }
-            }}
-          />
-        </Window>
-        <Thread />
-      </Channel>
+      <MyChat userId={userId} />
     </Chat>
   );
 };
