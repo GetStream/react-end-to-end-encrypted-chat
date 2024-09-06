@@ -3,8 +3,6 @@ import { createContext, useState } from 'react';
 import SealdSDK from '@seald-io/sdk'; // if your bundler supports the "browser" field in package.json (supported by Webpack 5)
 import SealdSDKPluginSSKSPassword from '@seald-io/sdk-plugin-ssks-password';
 import { EncryptionSession } from '@seald-io/sdk/lib/main.js';
-import { Message, SendMessageOptions, StreamChat } from 'stream-chat';
-import { DefaultStreamChatGenerics } from 'stream-chat-react';
 import { registerUser } from './registerUser';
 import { getDatabaseKey } from './getDatabaseKey';
 
@@ -15,13 +13,7 @@ type SealdState = {
   loadingState: 'loading' | 'finished';
   initializeSeald: (userId: string, password: string) => void;
   createEncryptionSession: (sealdId: string, channelId: string) => void;
-  encryptMessage: (
-    message: string,
-    channelId: string,
-    chatClient: StreamChat,
-    customMessageData: Partial<Message<DefaultStreamChatGenerics>> | undefined,
-    options: SendMessageOptions | undefined
-  ) => Promise<void>;
+  encryptMessage: (message: string) => Promise<string>;
   decryptMessage: (message: string, sessionId: string) => Promise<string>;
 };
 
@@ -32,7 +24,7 @@ const initialValue: SealdState = {
   loadingState: 'loading',
   initializeSeald: async () => {},
   createEncryptionSession: async () => {},
-  encryptMessage: async () => {},
+  encryptMessage: async () => '',
   decryptMessage: async () => '',
 };
 
@@ -100,35 +92,16 @@ export const SealdContextProvider = ({
   );
 
   const encryptMessage = useCallback(
-    async (
-      message: string,
-      channelId: string,
-      chatClient: StreamChat,
-      customMessageData:
-        | Partial<Message<DefaultStreamChatGenerics>>
-        | undefined,
-      options: SendMessageOptions | undefined
-    ) => {
-      let messageToSend = message;
-      if ((myState.sealdId, myState.encryptionSession)) {
+    async (message: string) => {
+      if (myState.sealdId && myState.encryptionSession) {
         const encryptedMessage = await myState.encryptionSession.encryptMessage(
           message
         );
 
-        messageToSend = encryptedMessage;
+        return encryptedMessage;
       }
-      try {
-        const channel = chatClient.channel('messaging', channelId);
-        const sendResult = await channel.sendMessage({
-          text: messageToSend,
-          customMessageData,
-          options,
-        });
 
-        console.log('sendResult', sendResult);
-      } catch (error) {
-        console.error('Error encrypting message: ', error);
-      }
+      return message;
     },
     [myState.sealdId, myState.encryptionSession]
   );

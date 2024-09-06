@@ -48,17 +48,24 @@ export default function MyChat({ userId }: { userId: string }) {
               customMessageData,
               options
             ) => {
-              const messageToSend = message.text;
+              let messageToSend = message.text;
               const extractedChannelId = channelId.split(':')[1];
 
               if (messageToSend) {
-                await encryptMessage(
-                  messageToSend,
-                  extractedChannelId,
-                  client,
+                messageToSend = await encryptMessage(message.text);
+              }
+
+              try {
+                const channel = client.channel('messaging', extractedChannelId);
+                const sendResult = await channel.sendMessage({
+                  text: messageToSend,
                   customMessageData,
-                  options
-                );
+                  options,
+                });
+
+                console.log('sendResult', sendResult);
+              } catch (error) {
+                console.error('Error encrypting message: ', error);
               }
             }}
           />
