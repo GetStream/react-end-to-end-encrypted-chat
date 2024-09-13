@@ -1,6 +1,7 @@
 # Secure a React Chat App With Seald's End-to-End Encryption
 
-![End-to-end encryption header](misc/HowToSecureVitePoweredApp-E2E-LinkedIn-1200x628.png)
+![HowToSecureVitePoweredApp-E2E-LinkedIn-1200x628](https://github.com/user-attachments/assets/952532e9-ca80-4d28-88d1-dff7802fb71f)
+
 
 Integrate the highest layer of security into a chat app built upon [Stream](https://getstream.io/) to protect users' messages, media, and conversation history using [Seald](https://www.seald.io/).
 
