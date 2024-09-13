@@ -9,18 +9,10 @@ import {
 } from 'stream-chat-react';
 import EncryptedMessage from './EncryptedMessage';
 import { useSealdContext } from '@/contexts/SealdContext';
-import { useEffect } from 'react';
 
 export default function MyChannel() {
-  const { client, channel } = useChatContext();
-  const { sealdId, createEncryptionSession, encryptMessage } =
-    useSealdContext();
-
-  useEffect(() => {
-    if (channel?.cid && sealdId) {
-      createEncryptionSession(sealdId, channel.cid);
-    }
-  }, [channel, sealdId, createEncryptionSession]);
+  const { client } = useChatContext();
+  const { encryptMessage } = useSealdContext();
 
   return (
     <Channel Message={EncryptedMessage}>
