@@ -11,12 +11,17 @@ export default function EncryptedMessage(): JSX.Element {
 
   useEffect(() => {
     if (message.text) {
-      const sessionId = JSON.parse(message.text).sessionId;
-      decryptMessage(message.text, sessionId).then(
-        (decryptedMessage: string) => {
-          setDisplayedMessage(decryptedMessage);
-        }
-      );
+      try {
+        const sessionId = JSON.parse(message.text).sessionId;
+        decryptMessage(message.text, sessionId).then(
+          (decryptedMessage: string) => {
+            setDisplayedMessage(decryptedMessage);
+          }
+        );
+      } catch {
+        console.log("Can't parse this message for decryption.");
+        setDisplayedMessage(`UNENCRYPTED MESSAGE: ${message.text}`);
+      }
     }
   }, [message.text, decryptMessage]);
   return (
