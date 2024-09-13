@@ -14,6 +14,12 @@
   }
 }
 
+html, body {
+
+  height: 100%;
+  width: 100%;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -24,4 +30,30 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+body {
+  display: flex;
+}
+
+.str-chat__channel-list {
+  width: 30%;
+}
+
+.str-chat__channel {
+  width: 100%;
+}
+
+.str-chat__thread {
+  width: 45%;
+}
+
+.messageBubble {
+  max-width: 80%;
+  background: lightblue;
+  overflow: hidden;
+  word-break: break-word;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  border-radius: 1rem;
 }

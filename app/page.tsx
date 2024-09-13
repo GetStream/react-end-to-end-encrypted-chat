@@ -1,5 +1,7 @@
 'use client';
 
+import MyChat from '@/components/MyChat';
+import { SealdContextProvider } from '@/contexts/SealdContext';
 import { useCallback, useEffect, useState } from 'react';
 import { User } from 'stream-chat';
 import { LoadingIndicator } from 'stream-chat-react';
@@ -14,8 +16,8 @@ export default function Home() {
   const [homeState, setHomeState] = useState<HomeState | undefined>();
   const [error, setError] = useState<string | undefined>();
 
-  const userId = '75511395-951d-4944-ba0a-443b926a58dc';
-  const userName = 'User 3';
+  const userId = '9d2307a2-72eb-4d12-b7f7-db3018243818';
+  const userName = 'Test User 4';
 
   const getUserToken = useCallback(async (userId: string, userName: string) => {
     const response = await fetch('/api/token', {
@@ -68,8 +70,11 @@ export default function Home() {
   }
 
   if (homeState) {
-    // return <MyChat {...homeState} />;
-    return <p>Starting chat</p>;
+    return (
+      <SealdContextProvider>
+        <MyChat {...homeState} />
+      </SealdContextProvider>
+    );
   } else {
     <section className='w-screen h-screen flex items-center justify-center'>
       <LoadingIndicator />
