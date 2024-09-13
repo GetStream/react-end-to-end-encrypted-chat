@@ -4,11 +4,16 @@ import type {
   ChannelOptions,
   User,
 } from 'stream-chat';
-import { ChannelList, Chat, useCreateChatClient } from 'stream-chat-react';
+import {
+  ChannelList,
+  Chat,
+  LoadingIndicator,
+  useCreateChatClient,
+} from 'stream-chat-react';
 import MyChannel from './MyChannel';
 import 'stream-chat-react/dist/css/v2/index.css';
 import { useSealdContext } from '@/contexts/SealdContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function MyChat({
   apiKey,
@@ -25,18 +30,18 @@ export default function MyChat({
     userData: user,
   });
 
-  const [initializing, setInitializing] = useState(false);
-  const { initializeSeald } = useSealdContext();
+  const { initializeSeald, loadingState } = useSealdContext();
+  const initializationRef = useRef(false);
 
   useEffect(() => {
-    if (!initializing) {
-      setInitializing(true);
+    if (!initializationRef.current && loadingState === 'loading') {
+      initializationRef.current = true;
       initializeSeald(user.id, 'password');
     }
-  }, [initializeSeald, user.id, initializing]);
+  }, [initializeSeald, user.id, loadingState]);
 
-  if (!chatClient) {
-    return <div>Error, please try again later.</div>;
+  if (!chatClient || loadingState === 'loading') {
+    return <LoadingIndicator />;
   }
 
   // Chat sorting options

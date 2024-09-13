@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useRef } from 'react';
 import { createContext, useState } from 'react';
 import SealdSDK from '@seald-io/sdk'; // if your bundler supports the "browser" field in package.json (supported by Webpack 5)
 import SealdSDKPluginSSKSPassword from '@seald-io/sdk-plugin-ssks-password';
@@ -36,9 +36,13 @@ export const SealdContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [myState, setMyState] = useState<SealdState>(initialValue);
+  const initializationRef = useRef(false);
 
   const initializeSeald = useCallback(
     async (userId: string, password: string) => {
+      if (initializationRef.current) return;
+      initializationRef.current = true;
+
       const appId = process.env.NEXT_PUBLIC_SEALD_APP_ID;
       const apiURL = process.env.NEXT_PUBLIC_SEALD_API_URL;
       const storageURL = process.env.NEXT_PUBLIC_KEY_STORAGE_URL;
@@ -90,7 +94,12 @@ export const SealdContextProvider = ({
         },
         { metadata: channelId }
       );
-      return session;
+      setMyState((myState) => {
+        return {
+          ...myState,
+          encryptionSession: session,
+        };
+      });
     },
     [myState.sealdClient]
   );
