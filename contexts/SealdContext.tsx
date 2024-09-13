@@ -49,7 +49,6 @@ export const SealdContextProvider = ({
 
       const databaseKey = await getDatabaseKey(userId);
       const databasePath = `seald-e2e-encrypted-chat-${userId}`;
-      console.log('DatabaseKey: ', databaseKey);
 
       const seald = SealdSDK({
         appId,
@@ -85,7 +84,6 @@ export const SealdContextProvider = ({
 
   const createEncryptionSession = useCallback(
     async (sealdId: string, channelId: string) => {
-      console.log('Creating encryption session');
       const session = await myState.sealdClient?.createEncryptionSession(
         {
           sealdIds: [sealdId],
@@ -99,12 +97,6 @@ export const SealdContextProvider = ({
 
   const encryptMessage = useCallback(
     async (message: string) => {
-      console.log(
-        'SealdID: ',
-        myState.sealdId,
-        ', session: ',
-        myState.encryptionSession
-      );
       if (myState.sealdId && myState.encryptionSession) {
         const encryptedMessage = await myState.encryptionSession.encryptMessage(
           message

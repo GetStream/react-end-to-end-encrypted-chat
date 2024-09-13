@@ -1,7 +1,6 @@
 'use server';
 
 export async function getDatabaseKey(userId: string): Promise<string> {
-  console.log('[Server] getDatabaseKey with userId: ', userId);
   const encoder = new TextEncoder();
   const data = encoder.encode(userId);
   const databaseKey = await crypto.subtle

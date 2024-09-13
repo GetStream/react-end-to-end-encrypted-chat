@@ -11,7 +11,6 @@ export default function EncryptedMessage(): JSX.Element {
 
   useEffect(() => {
     if (message.text) {
-      console.log('Message text: ', message.text);
       const sessionId = JSON.parse(message.text).sessionId;
       decryptMessage(message.text, sessionId).then(
         (decryptedMessage: string) => {

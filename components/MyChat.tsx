@@ -29,12 +29,6 @@ export default function MyChat({
   const { initializeSeald } = useSealdContext();
 
   useEffect(() => {
-    console.log(
-      'Initialize seald with ',
-      user.id,
-      ', initializing: ',
-      initializing
-    );
     if (!initializing) {
       setInitializing(true);
       initializeSeald(user.id, 'password');

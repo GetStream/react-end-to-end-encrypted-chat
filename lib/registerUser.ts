@@ -9,7 +9,6 @@ export async function registerUser(
   password: string
 ): Promise<string> {
   const signUpJWT = await createSignupJWT();
-  console.log('Signup JWT: ', signUpJWT);
   const identity = await seald.initiateIdentity({
     signupJWT: signUpJWT,
   });

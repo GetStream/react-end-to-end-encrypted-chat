@@ -17,7 +17,6 @@ export default function MyChannel() {
     useSealdContext();
 
   useEffect(() => {
-    console.log('Channel id: ', channel?.cid, ', seadlID: ', sealdId);
     if (channel?.cid && sealdId) {
       createEncryptionSession(sealdId, channel.cid);
     }
@@ -40,7 +39,6 @@ export default function MyChannel() {
 
             if (message.text) {
               messageToSend = await encryptMessage(message.text);
-              console.log('Updating message to send: ', messageToSend);
             }
 
             try {
