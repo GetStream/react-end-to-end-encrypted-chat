@@ -1,36 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Secure a React Chat App With Seald's End-to-End Encryption
 
-## Getting Started
+![End-to-end encryption header](misc/HowToSecureVitePoweredApp-E2E-LinkedIn-1200x628.png)
 
-First, run the development server:
+Integrate the highest layer of security into a chat app built upon [Stream](https://getstream.io/) to protect users' messages, media, and conversation history using [Seald](https://www.seald.io/).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Run the project
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This project is a Next.js application using the [Seald](https://docs.seald.io/en/sdk/) and [Stream Chat React SDK](https://getstream.io/chat/sdk/react/). You can use a GitHub Code Space to run the app or run it locally on your device. The `.env` file in the GitHub project requires your Seald credentials as well as your Stream project credentials (find a sample for the `.env` file in the [/.env.template] file). 
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Note**: Running the final project requires Stream and Seald SDKs credentials. Signup for [Stream](https://getstream.io/try-for-free/) and [Seald](https://dashboard.staging-0.seald.io/) accounts and follow the first article below to get started. The second article introduces you to fundamental concepts of E2EE. 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Read our E2EE articles
+- [Main Article: React App E2EE](https://getstream.io/blog/react-app-encryption)
+- [E2EE Concepts: Encrypting an App End-to-End](https://getstream.io/blog/end-to-end-encryption)  
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
