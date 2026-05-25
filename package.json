@@ -18,7 +18,7 @@
     "react-dom": "^18",
     "stream-chat": "^8.40.6",
     "stream-chat-react": "^11.23.9",
-    "uuid": "^10.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
