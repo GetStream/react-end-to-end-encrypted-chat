@@ -13,12 +13,12 @@
     "@seald-io/sdk-plugin-ssks-password": "^0.30.0",
     "buffer": "^6.0.3",
     "jose": "^5.8.0",
-    "next": "14.2.10",
+    "next": "15.5.18",
     "react": "^18",
     "react-dom": "^18",
     "stream-chat": "^8.40.6",
     "stream-chat-react": "^11.23.9",
-    "uuid": "^10.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
