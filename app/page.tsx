@@ -16,8 +16,6 @@ export default function Home() {
   const [homeState, setHomeState] = useState<HomeState | undefined>();
   const [error, setError] = useState<string | undefined>();
 
-  const userId = '9d2307a2-72eb-4d12-b7f7-db3018243818';
-  const userName = 'Test User 4';
 
   const getUserToken = useCallback(async (userId: string, userName: string) => {
     const response = await fetch('/api/token', {
@@ -51,6 +49,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Open the app as another user with `?user=<id>`, e.g. in a second browser
+    // profile, to try the end-to-end encryption between two users.
+    const userFromUrl = new URLSearchParams(window.location.search).get('user');
+    const userId = userFromUrl ?? '9d2307a2-72eb-4d12-b7f7-db3018243818';
+    const userName = userFromUrl ?? 'Test User 4';
+
     if (!userId) {
       setError('User id is not set.');
       return;
@@ -61,7 +65,7 @@ export default function Home() {
       return;
     }
     getUserToken(userId, userName);
-  }, [userId, userName, getUserToken]);
+  }, [getUserToken]);
 
   if (error) {
     return (

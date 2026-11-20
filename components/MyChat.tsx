@@ -4,6 +4,7 @@ import type {
   ChannelFilters,
   ClientUser,
   SortParamRequest,
+  StreamChat,
 } from 'stream-chat';
 import {
   ChannelHeader,
@@ -30,6 +31,21 @@ const layouts: LayoutDescriptor[] = [
 ];
 const overrides = { MessageUI: EncryptedMessage };
 
+/** The Stream user IDs of all members of a channel. */
+async function getMemberIds(client: StreamChat, cid: string) {
+  const [type, id] = cid.split(':');
+  const channel = client.channel(type, id);
+  const memberIds: string[] = [];
+  const limit = 100;
+  for (let offset = 0; ; offset += limit) {
+    const { members } = await channel.queryMembers({
+      payload: { filter_conditions: {}, limit, offset },
+    });
+    memberIds.push(...members.map((member) => member.user_id));
+    if (members.length < limit) return memberIds;
+  }
+}
+
 export default function MyChat({
   apiKey,
   user,
@@ -45,7 +61,8 @@ export default function MyChat({
     userData: user,
   });
 
-  const { initializeSeald, loadingState, encryptMessage } = useSealdContext();
+  const { initializeSeald, loadingState, encryptMessage, resetChannelSession } =
+    useSealdContext();
   const initializationRef = useRef(false);
 
   useEffect(() => {
@@ -93,7 +110,11 @@ export default function MyChat({
               throw new Error('The message has no text to encrypt.');
             }
 
-            const encryptedText = await encryptMessage(text, localMessage.cid);
+            const encryptedText = await encryptMessage(
+              text,
+              localMessage.cid,
+              () => getMemberIds(chatClient, localMessage.cid)
+            );
 
             // Send an allowlist of fields: the encrypted text plus metadata
             // (ids, thread, quote and mentions), never other content.
@@ -130,6 +151,19 @@ export default function MyChat({
       },
     });
   }, [chatClient, encryptMessage]);
+
+  // A channel's encryption session is for the members it had when it was
+  // created. When they change, the next message creates a new session.
+  useEffect(() => {
+    if (!chatClient) return;
+    const subscriptions = (['member.added', 'member.removed'] as const).map(
+      (eventType) =>
+        chatClient.on(eventType, (event) => {
+          if (event.cid) resetChannelSession(event.cid);
+        })
+    );
+    return () => subscriptions.forEach((s) => s.unsubscribe());
+  }, [chatClient, resetChannelSession]);
 
   // Chat sorting options
   const paginator = useMemo(() => {
