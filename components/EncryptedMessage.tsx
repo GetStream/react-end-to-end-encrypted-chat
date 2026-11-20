@@ -10,7 +10,9 @@ export default function EncryptedMessage(): JSX.Element {
   );
 
   useEffect(() => {
-    if (message.text) {
+    // Only messages the server has stored are encrypted: the optimistic copy of
+    // a message that is still being sent (or failed to send) holds the plain text.
+    if (message.text && message.status === 'received') {
       try {
         const sessionId = JSON.parse(message.text).sessionId;
         decryptMessage(message.text, sessionId).then(
@@ -23,7 +25,7 @@ export default function EncryptedMessage(): JSX.Element {
         setDisplayedMessage(`UNENCRYPTED MESSAGE: ${message.text}`);
       }
     }
-  }, [message.text, decryptMessage]);
+  }, [message.text, message.status, decryptMessage]);
   return (
     <div className='messageBubble'>
       <p>{displayedMessage}</p>

@@ -3,12 +3,12 @@
 import MyChat from '@/components/MyChat';
 import { SealdContextProvider } from '@/contexts/SealdContext';
 import { useCallback, useEffect, useState } from 'react';
-import { User } from 'stream-chat';
+import type { ClientUser } from 'stream-chat';
 import { LoadingIndicator } from 'stream-chat-react';
 
 type HomeState = {
   apiKey: string;
-  user: User;
+  user: ClientUser;
   token: string;
 };
 
@@ -28,15 +28,17 @@ export default function Home() {
 
     const responseBody = await response.json();
     if (response.status !== 200) {
-      setError(responseBody.message);
+      setError(responseBody.error);
+      return;
     }
     const token = responseBody.token;
 
     if (!token) {
       setError('No token found');
+      return;
     }
 
-    const user: User = {
+    const user: ClientUser = {
       id: userId,
       name: userName,
       image: `https://getstream.io/random_png/?id=${userId}&name=${userName}`,
@@ -75,9 +77,11 @@ export default function Home() {
         <MyChat {...homeState} />
       </SealdContextProvider>
     );
-  } else {
+  }
+
+  return (
     <section className='w-screen h-screen flex items-center justify-center'>
       <LoadingIndicator />
-    </section>;
-  }
+    </section>
+  );
 }

@@ -36,16 +36,12 @@ body {
   display: flex;
 }
 
-.str-chat__channel-list {
-  width: 30%;
+.str-chat {
+  --str-chat__channel-list-width: 30%;
 }
 
 .str-chat__channel {
   width: 100%;
-}
-
-.str-chat__thread {
-  width: 45%;
 }
 
 .messageBubble {

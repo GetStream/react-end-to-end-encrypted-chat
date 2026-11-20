@@ -7,7 +7,7 @@ import { getDatabaseKey } from '@/lib/getDatabaseKey';
 import { registerUser } from '@/lib/registerUser';
 
 type SealdState = {
-  sealdClient: typeof SealdSDK | undefined;
+  sealdClient: ReturnType<typeof SealdSDK> | undefined;
   encryptionSession: EncryptionSession | undefined;
   sealdId: string | undefined;
   loadingState: 'loading' | 'finished';
