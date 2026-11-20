@@ -29,7 +29,7 @@ export default function EncryptedMessage(): JSX.Element {
       return;
     }
 
-    decryptMessage(message.text, sessionId)
+    decryptMessage(message.text, sessionId, message.cid)
       .then((decryptedMessage: string) => {
         if (!ignore) setDisplayedMessage(decryptedMessage);
       })
@@ -41,7 +41,7 @@ export default function EncryptedMessage(): JSX.Element {
     return () => {
       ignore = true;
     };
-  }, [message.text, message.status, decryptMessage]);
+  }, [message.text, message.status, message.cid, decryptMessage]);
 
   return (
     <div className='messageBubble'>

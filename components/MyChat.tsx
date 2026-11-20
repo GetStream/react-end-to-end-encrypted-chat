@@ -61,8 +61,13 @@ export default function MyChat({
     userData: user,
   });
 
-  const { initializeSeald, loadingState, encryptMessage, resetChannelSession } =
-    useSealdContext();
+  const {
+    initializeSeald,
+    loadingState,
+    error: sealdError,
+    encryptMessage,
+    resetChannelSession,
+  } = useSealdContext();
   const initializationRef = useRef(false);
 
   useEffect(() => {
@@ -153,15 +158,19 @@ export default function MyChat({
   }, [chatClient, encryptMessage]);
 
   // A channel's encryption session is for the members it had when it was
-  // created. When they change, the next message creates a new session.
+  // created. When they change, the next message creates a new session. Member
+  // events missed while disconnected are covered by resetting every channel's
+  // session when the connection recovers.
   useEffect(() => {
     if (!chatClient) return;
-    const subscriptions = (['member.added', 'member.removed'] as const).map(
-      (eventType) =>
+    const subscriptions = [
+      ...(['member.added', 'member.removed'] as const).map((eventType) =>
         chatClient.on(eventType, (event) => {
           if (event.cid) resetChannelSession(event.cid);
         })
-    );
+      ),
+      chatClient.on('connection.recovered', () => resetChannelSession()),
+    ];
     return () => subscriptions.forEach((s) => s.unsubscribe());
   }, [chatClient, resetChannelSession]);
 
@@ -191,6 +200,20 @@ export default function MyChat({
       chatClient.channelManager.removePaginator(paginator);
     };
   }, [chatClient, paginator]);
+
+  if (loadingState === 'error') {
+    return (
+      <section className='w-screen h-screen flex flex-col items-center justify-center gap-4'>
+        <p>Encryption could not be set up: {sealdError}</p>
+        <button
+          className='rounded border px-4 py-2'
+          onClick={() => initializeSeald(user.id, 'password')}
+        >
+          Try again
+        </button>
+      </section>
+    );
+  }
 
   if (!chatClient || !paginator || loadingState === 'loading') {
     return <LoadingIndicator />;

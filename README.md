@@ -23,10 +23,10 @@ The rule for this demo: message content never reaches Stream in plain text. Mess
 
 ### How sessions work
 
-- Each user's Seald identity gets a connector, `<Stream user ID>@<Seald app ID>`, when it's created (`lib/createSignupJWT.ts`). On another browser or device, the identity is restored from Seald's key storage (SSKS) with the user's password.
-- The first message in a channel creates the channel's encryption session for all of its members' connectors. Every message carries its session ID, and readers retrieve the session by that ID.
-- When members are added or removed, the next message creates a new session for the current members. New members can't read messages sent before they joined.
-- Every channel member must have opened the app once (so their Seald identity exists) before anyone can send messages to the channel. Until then, sending fails.
+- Each user's Seald identity gets a connector when it's created (`lib/sealdConnector.ts`, `lib/createSignupJWT.ts`). The connector is a SHA-256 hash of the Stream user ID plus the Seald app ID, so it doesn't expose the user ID. On another browser or device, the identity is restored from Seald's key storage (SSKS) with the user's password.
+- The first message in a channel creates the channel's encryption session for all of its members' connectors. Members who haven't opened the app yet are included too, and can decrypt once they sign up. Every message carries its session ID, and readers retrieve the session by that ID.
+- The encrypted payload includes the channel ID. A message copied into another channel shows as "Can't decrypt this message."
+- When members are added or removed, or the connection recovers after a drop, the next message creates a new session for the current members. New members can't read messages sent before they joined.
 
 ### Setup
 
