@@ -2,30 +2,46 @@ import React, { useCallback, useContext, useRef } from 'react';
 import { createContext, useState } from 'react';
 import SealdSDK from '@seald-io/sdk'; // if your bundler supports the "browser" field in package.json (supported by Webpack 5)
 import SealdSDKPluginSSKSPassword from '@seald-io/sdk-plugin-ssks-password';
-import { EncryptionSession } from '@seald-io/sdk/lib/main.js';
+import type {
+  EncryptionSession,
+  RecipientsWithRights,
+} from '@seald-io/sdk/lib/main.js';
 import { getDatabaseKey } from '@/lib/getDatabaseKey';
 import { registerUser } from '@/lib/registerUser';
 
 type SealdState = {
   sealdClient: ReturnType<typeof SealdSDK> | undefined;
-  encryptionSession: EncryptionSession | undefined;
   sealdId: string | undefined;
   loadingState: 'loading' | 'finished';
   initializeSeald: (userId: string, password: string) => void;
-  createEncryptionSession: (sealdId: string, channelId: string) => void;
-  encryptMessage: (message: string) => Promise<string>;
+  /**
+   * Creates the encryption session of a channel. The recipients must be all
+   * channel members, so every member can decrypt. Nothing calls this yet: the
+   * app has no mapping from Stream users to Seald identities (see README).
+   */
+  createEncryptionSession: (
+    channelCid: string,
+    recipients: RecipientsWithRights
+  ) => Promise<EncryptionSession>;
+  /** Encrypts with the channel's session. Throws if the channel has none. */
+  encryptMessage: (message: string, channelCid: string) => Promise<string>;
   decryptMessage: (message: string, sessionId: string) => Promise<string>;
 };
 
 const initialValue: SealdState = {
   sealdClient: undefined,
-  encryptionSession: undefined,
   sealdId: undefined,
   loadingState: 'loading',
   initializeSeald: async () => {},
-  createEncryptionSession: async () => {},
-  encryptMessage: async () => '',
-  decryptMessage: async () => '',
+  createEncryptionSession: async () => {
+    throw new Error('Seald is not initialized.');
+  },
+  encryptMessage: async () => {
+    throw new Error('Seald is not initialized.');
+  },
+  decryptMessage: async () => {
+    throw new Error('Seald is not initialized.');
+  },
 };
 
 export const SealdContext = createContext<SealdState>(initialValue);
@@ -35,8 +51,19 @@ export const SealdContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [myState, setMyState] = useState<SealdState>(initialValue);
+  const [myState, setMyState] = useState<
+    Pick<SealdState, 'sealdClient' | 'sealdId' | 'loadingState'>
+  >({
+    sealdClient: undefined,
+    sealdId: undefined,
+    loadingState: 'loading',
+  });
   const initializationRef = useRef(false);
+  // One encryption session per channel, keyed by the channel's cid.
+  const sessionsByChannel = useRef(new Map<string, EncryptionSession>());
+  // Sessions retrieved for decryption, keyed by session id. Caching the promise
+  // means concurrent messages of the same session share one retrieval.
+  const sessionsById = useRef(new Map<string, Promise<EncryptionSession>>());
 
   const initializeSeald = useCallback(
     async (userId: string, password: string) => {
@@ -74,79 +101,68 @@ export const SealdContextProvider = ({
         mySealdId = await registerUser(seald, userId, password);
       }
 
-      setMyState((myState) => {
-        return {
-          ...myState,
-          sealdClient: seald,
-          sealdId: mySealdId,
-          loadingState: 'finished',
-        };
+      setMyState({
+        sealdClient: seald,
+        sealdId: mySealdId,
+        loadingState: 'finished',
       });
     },
     []
   );
 
   const createEncryptionSession = useCallback(
-    async (sealdId: string, channelId: string) => {
-      const session = await myState.sealdClient?.createEncryptionSession(
-        {
-          sealdIds: [sealdId],
-        },
-        { metadata: channelId }
+    async (channelCid: string, recipients: RecipientsWithRights) => {
+      if (!myState.sealdClient) {
+        throw new Error('Seald is not initialized.');
+      }
+      const session = await myState.sealdClient.createEncryptionSession(
+        recipients,
+        { metadata: channelCid }
       );
-      setMyState((myState) => {
-        return {
-          ...myState,
-          encryptionSession: session,
-        };
-      });
+      sessionsByChannel.current.set(channelCid, session);
+      sessionsById.current.set(session.sessionId, Promise.resolve(session));
+      return session;
     },
     [myState.sealdClient]
   );
 
   const encryptMessage = useCallback(
-    async (message: string) => {
-      if (myState.sealdId && myState.encryptionSession) {
-        const encryptedMessage = await myState.encryptionSession.encryptMessage(
-          message
+    async (message: string, channelCid: string) => {
+      const session = sessionsByChannel.current.get(channelCid);
+      if (!session) {
+        // Fail closed: never fall back to sending the plain text.
+        throw new Error(
+          `No encryption session for channel ${channelCid}. The message was not sent.`
         );
-
-        return encryptedMessage;
       }
-
-      return message;
+      return session.encryptMessage(message);
     },
-    [myState.sealdId, myState.encryptionSession]
+    []
   );
 
   const decryptMessage = useCallback(
     async (message: string, sessionId: string) => {
-      let encryptionSession = myState.encryptionSession;
-
-      if (!encryptionSession || encryptionSession.sessionId !== sessionId) {
-        // Either there is no session, or it doesn't match with the session id
-        encryptionSession =
-          await myState.sealdClient?.retrieveEncryptionSession({
-            sessionId,
-          });
-        setMyState((myState) => {
-          return {
-            ...myState,
-            encryptionSession: encryptionSession,
-          };
-        });
+      const sealdClient = myState.sealdClient;
+      if (!sealdClient) {
+        throw new Error('Seald is not initialized.');
       }
 
-      const decryptedMessage =
-        (await encryptionSession?.decryptMessage(message)) || message;
-      return decryptedMessage;
+      let sessionPromise = sessionsById.current.get(sessionId);
+      if (!sessionPromise) {
+        sessionPromise = sealdClient.retrieveEncryptionSession({ sessionId });
+        sessionsById.current.set(sessionId, sessionPromise);
+        // Don't cache a failed retrieval, so a later render can try again.
+        sessionPromise.catch(() => sessionsById.current.delete(sessionId));
+      }
+
+      const session = await sessionPromise;
+      return session.decryptMessage(message);
     },
-    [myState.encryptionSession, myState.sealdClient]
+    [myState.sealdClient]
   );
 
   const store: SealdState = {
     sealdClient: myState.sealdClient,
-    encryptionSession: myState.encryptionSession,
     sealdId: myState.sealdId,
     loadingState: myState.loadingState,
     initializeSeald,

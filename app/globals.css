@@ -53,3 +53,8 @@ body {
   margin: 1rem 0;
   border-radius: 1rem;
 }
+
+.messageError {
+  font-size: 0.75rem;
+  color: #b91c1c;
+}
