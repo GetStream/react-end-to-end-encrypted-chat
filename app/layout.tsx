@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+// The SDK stylesheet must load before globals.css, so the app's overrides
+// (e.g. --str-chat__channel-list-width) win over the SDK defaults.
+import 'stream-chat-react/dist/css/index.css';
 import './globals.css';
 
 const geistSans = localFont({
