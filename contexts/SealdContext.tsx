@@ -268,7 +268,11 @@ export const SealdContextProvider = ({
       } catch {
         // Not a payload of this app.
       }
-      if (payload?.cid !== channelCid || typeof payload.text !== 'string') {
+      // Messages encrypted by earlier versions of the app hold the bare text.
+      if (typeof payload?.cid !== 'string' || typeof payload.text !== 'string') {
+        return decrypted;
+      }
+      if (payload.cid !== channelCid) {
         throw new Error('This message was not encrypted for this channel.');
       }
       return payload.text;
