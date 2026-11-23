@@ -36,16 +36,12 @@ body {
   display: flex;
 }
 
-.str-chat__channel-list {
-  width: 30%;
+.str-chat {
+  --str-chat__channel-list-width: 30%;
 }
 
 .str-chat__channel {
   width: 100%;
-}
-
-.str-chat__thread {
-  width: 45%;
 }
 
 .messageBubble {
@@ -56,4 +52,9 @@ body {
   padding: 0.5rem 1rem;
   margin: 1rem 0;
   border-radius: 1rem;
+}
+
+.messageError {
+  font-size: 0.75rem;
+  color: #b91c1c;
 }
